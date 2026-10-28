@@ -29,6 +29,10 @@ on:
         description: URL pública del servicio desplegado
         type: string
         default: ""
+      render-service-id:
+        description: Id del servicio en Render (srv-...). Evita desplegar con el hook de otro servicio
+        type: string
+        default: ""
     secrets:
       RENDER_DEPLOY_HOOK:
         description: URL secreta que redespliega el servicio en Render
@@ -100,6 +104,12 @@ jobs:
         run: |
           if [ -z "$HOOK" ]; then
             echo "::error::Falta el secret RENDER_DEPLOY_HOOK (Settings › Secrets and variables › Actions)"
+            exit 1
+          fi
+          # La URL del hook contiene el id del servicio: si no coincide, se guardó el hook de otro servicio.
+          SERVICIO="${{ inputs.render-service-id }}"
+          if [ -n "$SERVICIO" ] && [[ "$HOOK" != *"/$SERVICIO?"* ]]; then
+            echo "::error::RENDER_DEPLOY_HOOK no pertenece a $SERVICIO: se guardó el hook de otro servicio"
             exit 1
           fi
           curl -fsS -X POST "$HOOK" -o /dev/null
