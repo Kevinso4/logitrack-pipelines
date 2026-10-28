@@ -14,6 +14,9 @@ gitleaks          + latest)          (entorno production)
 - **docker** y **deploy** solo se ejecutan en `main`: un pull request nunca despliega.
 - Credenciales: la imagen se publica con el `GITHUB_TOKEN` temporal del propio workflow y el despliegue usa el
   secret `RENDER_DEPLOY_HOOK` de cada repositorio. Ninguna credencial está escrita en el YAML.
+- Antes de desplegar se comprueba que el hook pertenezca al servicio (`render-service-id`): un hook pegado en el
+  repositorio equivocado no redespliega otro servicio. Si una prueba falla, el resumen público de la ejecución
+  indica cuál.
 
 ## Uso desde un microservicio
 
@@ -35,6 +38,7 @@ jobs:
       service-name: fleet
       imagen: ghcr.io/kevinso4/logitrack-fleet
       url: https://tracklogi-fleet.onrender.com
+      render-service-id: srv-daqqf65g1s2s73eijfug  # el hook debe ser de este servicio
     secrets: inherit
 ```
 
