@@ -58,7 +58,15 @@ jobs:
       - name: Lint
         run: ruff check --select F,E9,B --ignore B008,B904 common ${{ inputs.service-name }}
       - name: Pruebas
-        run: python -m pytest -q ${{ inputs.service-name }}/tests
+        run: |
+          set -o pipefail
+          python -m pytest -q -rf ${{ inputs.service-name }}/tests | tee pytest.log
+      - name: Señalar las pruebas que fallaron
+        if: failure()
+        run: |
+          grep "^FAILED" pytest.log | while read -r linea; do
+            echo "::error title=Prueba fallida — no se publica ni se despliega::${linea#FAILED }"
+          done
       - name: Dependencias con vulnerabilidades conocidas
         run: pip-audit -r requirements.txt
       - name: Secretos filtrados en el código
